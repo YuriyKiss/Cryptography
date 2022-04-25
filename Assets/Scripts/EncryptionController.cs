@@ -1,8 +1,10 @@
+using SFB;
 using TMPro;
 
 using UnityEngine;
 using UnityEngine.UI;
 
+using System.IO;
 using System.Collections;
 
 public class EncryptionController : MonoBehaviour
@@ -19,16 +21,16 @@ public class EncryptionController : MonoBehaviour
     public Button encryptButton;
     public Button decryptButton;
 
-    [Header("User warning")]
-    public TMP_Text warning;
+    [Header("User messaging")]
+    public TMP_Text messageField;
     public float warningTime;
+    public float authorMessageTime;
 
     private IEncryption encryption;
 
     public void OnEncryptButtonPressed()
     {
         ClearWarningMessage();
-
         string message = encryptionField.text;
 
         TMP_InputField[] optionInputFields = encryptionSettings.GetComponentsInChildren<TMP_InputField>(false);
@@ -48,14 +50,13 @@ public class EncryptionController : MonoBehaviour
         }
         else
         {
-            StartCoroutine(SendUserMessage(validationMessage));
+            StartCoroutine(SendUserMessage(validationMessage, Color.red, warningTime));
         }
     }
 
     public void OnDecryptButtonPressed()
     {
         ClearWarningMessage();
-
         string message = decryptionField.text;
 
         TMP_InputField[] optionInputFields = encryptionSettings.GetComponentsInChildren<TMP_InputField>(false);
@@ -75,7 +76,7 @@ public class EncryptionController : MonoBehaviour
         }
         else
         {
-            StartCoroutine(SendUserMessage(validationMessage));
+            StartCoroutine(SendUserMessage(validationMessage, Color.red, warningTime));
         }
     }
 
@@ -135,13 +136,100 @@ public class EncryptionController : MonoBehaviour
     private void ClearWarningMessage()
     {
         StopAllCoroutines();
-        warning.text = "";
+        messageField.text = "";
     }
 
-    private IEnumerator SendUserMessage(string message)
+    public IEnumerator SendUserMessage(string message, Color color, float time)
     {
-        warning.text = message;
-        yield return new WaitForSeconds(warningTime);
-        warning.text = "";
+        messageField.color = color;
+        messageField.text = message;
+        yield return new WaitForSecondsRealtime(time);
+        messageField.text = "";
     }
+
+    public void OpenFileEncryption()
+    {
+        var extensions = new[] {
+            new ExtensionFilter("Text Files", "txt" ),
+            new ExtensionFilter("All Files", "*" ),
+            };
+
+        string[] path = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
+
+        if (path == null)
+        {
+            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
+            return;
+        }
+
+        StreamReader reader = new StreamReader(path[0]);
+        encryptionField.text = reader.ReadToEnd();
+        reader.Close();
+    }
+
+    public void SaveFileEncryption()
+    {
+        var extensionList = new[] {
+            new ExtensionFilter("Text", "txt")
+        };
+
+        string path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "New File", extensionList);
+
+        if (path == "")
+        {
+            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
+            return;
+        }
+
+        StreamWriter writer = new StreamWriter(path, true);
+        writer.Write(encryptionField.text);
+        writer.Close();
+    }
+
+    public void OpenFileDecryption()
+    {
+        var extensions = new[] {
+            new ExtensionFilter("Text Files", "txt" ),
+            new ExtensionFilter("All Files", "*" ),
+            };
+
+        string[] path = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
+
+        if (path == null)
+        {
+            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
+            return;
+        }
+
+        StreamReader reader = new StreamReader(path[0]);
+        decryptionField.text = reader.ReadToEnd();
+        reader.Close();
+    }
+
+    public void SaveFileDecryption()
+    {
+        var extensionList = new[] {
+            new ExtensionFilter("Text", "txt")
+        };
+
+        string path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "New File", extensionList);
+
+        if (path == "")
+        {
+            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
+            return;
+        }
+
+        StreamWriter writer = new StreamWriter(path, true);
+        writer.Write(decryptionField.text);
+        writer.Close();
+    }
+
+    public void ShowAuthor()
+    {
+        ClearWarningMessage();
+        StartCoroutine(SendUserMessage("Made by Kis Yuriy\nPMi-33", Color.black, authorMessageTime));
+    }
+
+    public void ExitApplication() => Application.Quit();
 }

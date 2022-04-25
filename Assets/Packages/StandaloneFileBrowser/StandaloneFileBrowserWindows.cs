@@ -36,7 +36,7 @@ namespace SFB {
                 fd.FileName = GetDirectoryPath(directory);
             }
             var res = fd.ShowDialog(new WindowWrapper(GetActiveWindow()));
-            var filenames = res == DialogResult.OK ? fd.FileNames : new string[0];
+            var filenames = res == DialogResult.OK ? fd.FileNames : null;
             fd.Dispose();
             return filenames;
         }
