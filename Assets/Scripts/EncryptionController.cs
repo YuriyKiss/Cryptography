@@ -17,6 +17,8 @@ public class EncryptionController : MonoBehaviour
     public TMP_Dropdown encryptionSelector;
     public GameObject encryptionSettings;
 
+    public Toggle frequncyDistribution;
+
     [Header("Buttons")]
     public Button encryptButton;
     public Button decryptButton;
@@ -45,8 +47,16 @@ public class EncryptionController : MonoBehaviour
 
         if (validationMessage == "")
         {
-            encryptionField.text = "";
             decryptionField.text = encryption.Encrypt(message, options);
+
+            // Frequency distribution
+            Toggle toggle = GetComponentInChildren<Toggle>(false);
+            if (toggle != null && toggle.isOn)
+            {
+                SaveFile(FrequencyDistribution.Distribute(encryptionField.text, decryptionField.text));
+            }
+
+            encryptionField.text = "";
         }
         else
         {
@@ -133,6 +143,67 @@ public class EncryptionController : MonoBehaviour
         encryption = null;
     }
 
+    public void OpenFileEncryption()
+    {
+        encryptionField.text = OpenFile();
+    }
+
+    public void OpenFileDecryption()
+    {
+        decryptionField.text = OpenFile();
+    }
+
+    private string OpenFile()
+    {
+        var extensions = new[] {
+            new ExtensionFilter("Text Files", "txt" ),
+            new ExtensionFilter("All Files", "*" ),
+            };
+
+        string[] path = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
+
+        if (path == null)
+        {
+            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
+            return "";
+        }
+
+        StreamReader reader = new StreamReader(path[0]);
+        string message = reader.ReadToEnd();
+        reader.Close();
+
+        return message;
+    }
+
+    public void SaveFileEncryption()
+    {
+        SaveFile(encryptionField.text);
+    }
+
+    public void SaveFileDecryption()
+    {
+        SaveFile(decryptionField.text);
+    }
+
+    private void SaveFile(string message)
+    {
+        var extensionList = new[] {
+            new ExtensionFilter("Text", "txt")
+        };
+
+        string path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "New File", extensionList);
+
+        if (path == "")
+        {
+            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
+            return;
+        }
+
+        StreamWriter writer = new StreamWriter(path, true);
+        writer.Write(message);
+        writer.Close();
+    }
+
     private void ClearWarningMessage()
     {
         StopAllCoroutines();
@@ -145,84 +216,6 @@ public class EncryptionController : MonoBehaviour
         messageField.text = message;
         yield return new WaitForSecondsRealtime(time);
         messageField.text = "";
-    }
-
-    public void OpenFileEncryption()
-    {
-        var extensions = new[] {
-            new ExtensionFilter("Text Files", "txt" ),
-            new ExtensionFilter("All Files", "*" ),
-            };
-
-        string[] path = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
-
-        if (path == null)
-        {
-            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
-            return;
-        }
-
-        StreamReader reader = new StreamReader(path[0]);
-        encryptionField.text = reader.ReadToEnd();
-        reader.Close();
-    }
-
-    public void SaveFileEncryption()
-    {
-        var extensionList = new[] {
-            new ExtensionFilter("Text", "txt")
-        };
-
-        string path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "New File", extensionList);
-
-        if (path == "")
-        {
-            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
-            return;
-        }
-
-        StreamWriter writer = new StreamWriter(path, true);
-        writer.Write(encryptionField.text);
-        writer.Close();
-    }
-
-    public void OpenFileDecryption()
-    {
-        var extensions = new[] {
-            new ExtensionFilter("Text Files", "txt" ),
-            new ExtensionFilter("All Files", "*" ),
-            };
-
-        string[] path = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
-
-        if (path == null)
-        {
-            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
-            return;
-        }
-
-        StreamReader reader = new StreamReader(path[0]);
-        decryptionField.text = reader.ReadToEnd();
-        reader.Close();
-    }
-
-    public void SaveFileDecryption()
-    {
-        var extensionList = new[] {
-            new ExtensionFilter("Text", "txt")
-        };
-
-        string path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "New File", extensionList);
-
-        if (path == "")
-        {
-            StartCoroutine(SendUserMessage("Please select file", Color.yellow, warningTime));
-            return;
-        }
-
-        StreamWriter writer = new StreamWriter(path, true);
-        writer.Write(decryptionField.text);
-        writer.Close();
     }
 
     public void ShowAuthor()
