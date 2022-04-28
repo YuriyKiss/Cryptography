@@ -104,27 +104,26 @@ public class EncryptionController : MonoBehaviour
 
         int selectorValue = encryptionSelector.value;
 
+        if (selectorValue > 0) 
+        {
+            encryptButton.interactable = true;
+            decryptButton.interactable = true;
+
+            SetEncryptionSettings(selectorValue);
+        }
+
         switch (selectorValue)
         {
             case 1:
-                encryptButton.interactable = true;
-                decryptButton.interactable = true;
-
-                SetEncryptionSettings(selectorValue);
                 encryption = new CaesarsCipher();
                 break;
             case 2:
-                encryptButton.interactable = true;
-                decryptButton.interactable = true;
-
-                SetEncryptionSettings(selectorValue);
-                encryption = new XOREncryption();
+                encryption = new TritemiusEncryption();
                 break;
             case 3:
-                encryptButton.interactable = true;
-                decryptButton.interactable = true;
-
-                SetEncryptionSettings(selectorValue);
+                encryption = new XOREncryption();
+                break;
+            case 4:
                 encryption = new VigenereEncryption();
                 break;
             case 0:
