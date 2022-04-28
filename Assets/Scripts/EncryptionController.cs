@@ -90,6 +90,13 @@ public class EncryptionController : MonoBehaviour
         }
     }
 
+    public void OnKeyLoadRequested()
+    {
+        TMP_InputField input = encryptionSettings.GetComponentInChildren<TMP_InputField>();
+
+        input.text = OpenFile();
+    }
+
     public void OnSelectorValueChanged()
     {
         ClearWarningMessage();
@@ -105,6 +112,20 @@ public class EncryptionController : MonoBehaviour
 
                 SetEncryptionSettings(selectorValue);
                 encryption = new CaesarsCipher();
+                break;
+            case 2:
+                encryptButton.interactable = true;
+                decryptButton.interactable = true;
+
+                SetEncryptionSettings(selectorValue);
+                encryption = new XOREncryption();
+                break;
+            case 3:
+                encryptButton.interactable = true;
+                decryptButton.interactable = true;
+
+                SetEncryptionSettings(selectorValue);
+                encryption = new VigenereEncryption();
                 break;
             case 0:
                 encryptButton.interactable = false;
