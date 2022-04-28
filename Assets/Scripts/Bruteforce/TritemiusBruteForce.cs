@@ -48,6 +48,8 @@ public class TritemiusBruteForce : MonoBehaviour
                             StartCoroutine(controller.SendUserMessage($"Keys:\n\t a: {Helper.Mod(i, language.Value.Length)}\n" +
                                 $"\t b: {Helper.Mod(j, language.Value.Length)}\n" +
                                 $"\t c: {Helper.Mod(k, language.Value.Length)}\n", Color.green, 5f));
+
+                            return;
                         }
                     }
                 }
