@@ -30,6 +30,7 @@ public class EncryptionController : MonoBehaviour
 
     private IEncryption encryption;
 
+    #region Encryption/Decryption
     public void OnEncryptButtonPressed()
     {
         ClearWarningMessage();
@@ -89,14 +90,9 @@ public class EncryptionController : MonoBehaviour
             StartCoroutine(SendUserMessage(validationMessage, Color.red, warningTime));
         }
     }
+    #endregion
 
-    public void OnKeyLoadRequested()
-    {
-        TMP_InputField input = encryptionSettings.GetComponentInChildren<TMP_InputField>();
-
-        input.text = OpenFile();
-    }
-
+    #region Selecting Encryption
     public void OnSelectorValueChanged()
     {
         ClearWarningMessage();
@@ -125,6 +121,9 @@ public class EncryptionController : MonoBehaviour
                 break;
             case 4:
                 encryption = new VigenereEncryption();
+                break;
+            case 5:
+                encryption = new RSAEncryption();
                 break;
             case 0:
                 encryptButton.interactable = false;
@@ -162,7 +161,9 @@ public class EncryptionController : MonoBehaviour
 
         encryption = null;
     }
+    #endregion
 
+    #region Open/Save
     public void OpenFileEncryption()
     {
         encryptionField.text = OpenFile();
@@ -176,8 +177,8 @@ public class EncryptionController : MonoBehaviour
     private string OpenFile()
     {
         var extensions = new[] {
-            new ExtensionFilter("Text Files", "txt" ),
-            new ExtensionFilter("All Files", "*" ),
+            new ExtensionFilter("Text Files ", "txt" ),
+            new ExtensionFilter("Images ", "png" ),
             };
 
         string[] path = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
@@ -188,11 +189,20 @@ public class EncryptionController : MonoBehaviour
             return "";
         }
 
-        StreamReader reader = new StreamReader(path[0]);
-        string message = reader.ReadToEnd();
-        reader.Close();
+        if (path[0].EndsWith(".txt"))
+        {
+            StreamReader reader = new StreamReader(path[0]);
+            string message = reader.ReadToEnd();
+            reader.Close();
 
-        return message;
+            return message;
+        }
+        else if (path[0].EndsWith(".png"))
+        {
+            return Helper.ProcessImageToString(path[0]);
+        }
+
+        return "";
     }
 
     public void SaveFileEncryption()
@@ -208,7 +218,7 @@ public class EncryptionController : MonoBehaviour
     private void SaveFile(string message)
     {
         var extensionList = new[] {
-            new ExtensionFilter("Text", "txt")
+            new ExtensionFilter("Text File ", "txt")
         };
 
         string path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "New File", extensionList);
@@ -223,7 +233,9 @@ public class EncryptionController : MonoBehaviour
         writer.Write(message);
         writer.Close();
     }
+    #endregion
 
+    #region  Messaging system
     private void ClearWarningMessage()
     {
         StopAllCoroutines();
@@ -237,7 +249,9 @@ public class EncryptionController : MonoBehaviour
         yield return new WaitForSecondsRealtime(time);
         messageField.text = "";
     }
+    #endregion
 
+    #region Author/Exit
     public void ShowAuthor()
     {
         ClearWarningMessage();
@@ -245,4 +259,44 @@ public class EncryptionController : MonoBehaviour
     }
 
     public void ExitApplication() => Application.Quit();
+    #endregion
+
+    #region Additional Events
+    // XOR Specific
+    public void OnKeyLoadRequested()
+    {
+        TMP_InputField input = encryptionSettings.GetComponentInChildren<TMP_InputField>(false);
+
+        input.text = OpenFile();
+    }
+
+    // RSA Specific
+    public void OnKeyGenerationRequested()
+    {
+        TMP_InputField[] inputs = encryptionSettings.GetComponentsInChildren<TMP_InputField>(false);
+
+        string[] options = new string[3];
+        options[0] = inputs[0].text;
+        options[1] = inputs[1].text;
+        options[2] = inputs[2].text;
+
+        string respone = encryption.Validate(encryptionField.text, options);
+
+        if (respone != "")
+        {
+            StartCoroutine(SendUserMessage(respone, Color.red, warningTime));
+            return;
+        }
+
+        var keys = (encryption as RSAEncryption).
+            GetKeys(int.Parse(inputs[0].text), 
+                    int.Parse(inputs[1].text), 
+                    int.Parse(inputs[2].text));
+
+        inputs[3].text = keys.open.Exp.ToString();
+        inputs[4].text = keys.open.N.ToString();
+        inputs[5].text = keys.closed.Exp.ToString();
+        inputs[6].text = keys.closed.N.ToString();
+    }
+    #endregion
 }
