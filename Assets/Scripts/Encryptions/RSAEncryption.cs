@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Linq;
 using System.Numerics;
 using System.Collections.Generic;
@@ -74,21 +75,43 @@ public class RSAEncryption : IEncryption
         int Exp = int.Parse(options[3]);
         int N = int.Parse(options[4]);
 
-        BigInteger m = BigInteger.Parse(convertedMessage);
-        BigInteger exp = Exp;
+        List<string> stringBuilder = new List<string>();
+        int blockSize = GetBlockSize(N, alphabet.Length);
+        for (var i = 0; i < convertedMessage.Length; i += blockSize)
+        {
+            string temp = string.Join(string.Empty, convertedMessage.Skip(i).Take(blockSize));
+            BigInteger block = BigInteger.Parse(AddZerosEncrypt(temp, blockSize));
+            var temp2 = BigInteger.ModPow(block, Exp, N).ToString();
+            stringBuilder.Add(temp2);
+        }
 
-        return BigInteger.ModPow(m, exp, N).ToString();
+        return string.Join(" ", stringBuilder.ToArray());
     }
 
     public string Decrypt(string message, string[] options)
     {
+        string alphabet = " abcdefghijklmnopqrstuvwxyz";
+
         int Exp = int.Parse(options[5]);
         int N = int.Parse(options[6]);
 
-        BigInteger c = BigInteger.Parse(message);
-        BigInteger d = Exp;
+        StringBuilder result = new StringBuilder();
+        var splittedText = message.Split(' ');
+        foreach (string block in splittedText)
+        {
+            BigInteger numBlock = BigInteger.Parse(block);
+            string decryptedText = BigInteger.ModPow(numBlock, Exp, N).ToString();
+            result.Append(AddZerosDecrypt(decryptedText, GetBlockSize(N, alphabet.Length)));
+        }
 
-        return BigInteger.ModPow(c, d, N).ToString();
+        string almostCompleteResult = result.ToString();
+        string completeResult = string.Empty;
+        for (int i = 0; i < almostCompleteResult.Length; i += 2)
+        {
+            int number = int.Parse(almostCompleteResult.Substring(i, 2));
+            completeResult += alphabet[number];
+        }
+        return completeResult;
     }
 
     public static string ConvertSymbols(string text, string alphabet)
@@ -104,6 +127,41 @@ public class RSAEncryption : IEncryption
         }
 
         return result;
+    }
+
+    private int GetBlockSize(int N, int size)
+    {
+        int i = 1;
+        while (i <= 100)
+        {
+            int lowerBound = int.Parse(string.Concat(Enumerable.Repeat(size, i)));
+            int upperBound = int.Parse(string.Concat(Enumerable.Repeat(size, i + 1)));
+            if (N < upperBound && N > lowerBound)
+            {
+                return lowerBound.ToString().Length;
+            }
+            i++;
+        }
+
+        return 0;
+    }
+
+    private string AddZerosEncrypt(string text, int blockSize)
+    {
+        while (text.Length % blockSize != 0)
+        {
+            text += "0";
+        }
+        return text;
+    }
+
+    private string AddZerosDecrypt(string text, int blockSize)
+    {
+        while (text.Length % blockSize != 0)
+        {
+            text = text.Insert(0, "0");
+        }
+        return text;
     }
 
     public (Key open, Key closed) GetKeys(int p, int q, int e)
