@@ -125,7 +125,9 @@ public class EncryptionController : MonoBehaviour
             case 5:
                 encryption = new RSAEncryption();
                 break;
-            case 0:
+            case 0: case 6:
+                encryption = null;
+
                 encryptButton.interactable = false;
                 decryptButton.interactable = false;
                 break;
