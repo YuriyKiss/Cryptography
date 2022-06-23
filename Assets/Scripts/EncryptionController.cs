@@ -30,6 +30,12 @@ public class EncryptionController : MonoBehaviour
 
     private IEncryption encryption;
 
+    private void Awake()
+    {
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 60;
+    }
+
     #region Encryption/Decryption
     public void OnEncryptButtonPressed()
     {
